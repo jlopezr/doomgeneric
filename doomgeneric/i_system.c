@@ -23,10 +23,14 @@
 
 #include <stdarg.h>
 
+#ifdef MINIGPU
+#include <console.h>
+#endif
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#else
+#elif !defined(MINIGPU)
 #include <unistd.h>
 #endif
 
@@ -209,7 +213,9 @@ void I_PrintStartupBanner(char *gamedescription)
 
 boolean I_ConsoleStdout(void)
 {
-#ifdef _WIN32
+#ifdef MINIGPU
+    return true;
+#elif defined(_WIN32)
     // SDL "helpfully" always redirects stdout to a file.
     return 0;
 #else
@@ -358,6 +364,14 @@ static boolean already_quitting = false;
 
 void I_Error (char *error, ...)
 {
+#ifdef MINIGPU
+    va_list argptr;
+    va_start(argptr, error);
+    tee_vprintf(error, argptr);
+    tee_printf("\n");
+    va_end(argptr);
+    exit(1);
+#else
     char msgbuf[512];
     va_list argptr;
     atexit_listentry_t *entry;
@@ -468,6 +482,7 @@ void I_Error (char *error, ...)
 #else
     exit(-1);
 #endif
+#endif /* MINIGPU */
 }
 
 //

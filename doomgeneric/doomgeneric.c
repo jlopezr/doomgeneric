@@ -16,7 +16,9 @@ void doomgeneric_Create(int argc, char **argv)
     myargc = argc;
     myargv = argv;
 
-	M_FindResponseFile();
+#ifndef MINIGPU
+    M_FindResponseFile();
+#endif
 
 	DG_ScreenBuffer = malloc(DOOMGENERIC_RESX * DOOMGENERIC_RESY * 4);
 

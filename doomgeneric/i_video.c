@@ -42,11 +42,9 @@ rcsid[] = "$Id: i_x.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <fcntl.h>
 
 #include <stdarg.h>
 
-#include <sys/types.h>
 
 //#define CMAP256
 
@@ -75,6 +73,8 @@ struct FB_ScreenInfo
 static struct FB_ScreenInfo s_Fb;
 int fb_scaling = 1;
 int usemouse = 0;
+
+extern void I_InitInput(void);
 
 
 #ifdef CMAP256
@@ -291,7 +291,6 @@ void I_InitGraphics (void)
 
 	screenvisible = true;
 
-    extern void I_InitInput(void);
     I_InitInput();
 }
 

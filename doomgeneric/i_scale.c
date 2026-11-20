@@ -32,6 +32,10 @@
 #define inline __inline
 #endif
 
+#ifdef MINIGPU
+#define inline
+#endif
+
 // Should be I_VideoBuffer
 
 static byte *src_buffer;

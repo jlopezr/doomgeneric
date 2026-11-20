@@ -667,13 +667,13 @@ static void PadRejectArray(byte *array, unsigned int len)
 
     // Values to pad the REJECT array with:
 
-    unsigned int rejectpad[4] =
-    {
-        ((totallines * 4 + 3) & ~3) + 24,     // Size
-        0,                                    // Part of z_zone block header
-        50,                                   // PU_LEVEL
-        0x1d4a11                              // DOOM_CONST_ZONEID
-    };
+    unsigned int rejectpad[4];
+
+    /* mini-lcc does not accept a non-constant local aggregate initializer. */
+    rejectpad[0] = ((totallines * 4 + 3) & ~3) + 24; // Size
+    rejectpad[1] = 0;                                // Zone block header
+    rejectpad[2] = 50;                               // PU_LEVEL
+    rejectpad[3] = 0x1d4a11;                         // DOOM_CONST_ZONEID
 
     // Copy values from rejectpad into the destination array.
 

@@ -25,7 +25,11 @@
 
 #include "w_file.h"
 
+#ifdef MINIGPU
+extern wad_file_class_t minigpu_wad_file;
+#else
 extern wad_file_class_t stdc_wad_file;
+#endif
 
 /*
 #ifdef _WIN32
@@ -47,7 +51,11 @@ static wad_file_class_t *wad_file_classes[] =
 #ifdef HAVE_MMAP
     &posix_wad_file,
 #endif
+#ifdef MINIGPU
+    &minigpu_wad_file,
+#else
     &stdc_wad_file,
+#endif
 };
 
 wad_file_t *W_OpenFile(char *path)
@@ -60,6 +68,10 @@ wad_file_t *W_OpenFile(char *path)
     // directly into memory.
     //
 
+#ifdef MINIGPU
+    /* The embedded IWAD is the only filesystem object in this first port. */
+    return minigpu_wad_file.OpenFile(path);
+#else
     if (!M_CheckParm("-mmap"))
     {
         return stdc_wad_file.OpenFile(path);
@@ -80,6 +92,7 @@ wad_file_t *W_OpenFile(char *path)
     }
 
     return result;
+#endif
 }
 
 void W_CloseFile(wad_file_t *wad)

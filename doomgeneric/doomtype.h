@@ -60,7 +60,11 @@
 // pre-standardisation version).  inttypes.h is also in the C99 
 // standard and defined to include stdint.h, so include this. 
 
+#ifdef MINIGPU
+#include <stdint.h>
+#else
 #include <inttypes.h>
+#endif
 
 #if defined(__cplusplus) || defined(__bool_true_false_are_defined)
 

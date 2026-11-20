@@ -22,7 +22,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifndef MINIGPU
 #include <errno.h>
+#endif
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -31,7 +33,7 @@
 #ifdef _MSC_VER
 #include <direct.h>
 #endif
-#else
+#elif !defined(MINIGPU)
 #include <sys/stat.h>
 #include <sys/types.h>
 #endif
@@ -65,6 +67,10 @@ void M_MakeDirectory(char *path)
 
 boolean M_FileExists(char *filename)
 {
+#ifdef MINIGPU
+    /* The embedded IWAD has one virtual name solely for D_FindIWADByName(). */
+    return !strcmp(filename, "embedded.wad");
+#else
     FILE *fstream;
 
     fstream = fopen(filename, "r");
@@ -81,6 +87,7 @@ boolean M_FileExists(char *filename)
 
         return errno == EISDIR;
     }
+#endif
 }
 
 //

@@ -22,7 +22,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifndef MINIGPU
 #include <errno.h>
+#endif
 
 #include "config.h"
 
@@ -1715,6 +1717,9 @@ static void SaveDefaultCollection(default_collection_t *collection)
 
 static int ParseIntParameter(char *strparm)
 {
+#ifdef MINIGPU
+    return atoi(strparm);
+#else
     int parm;
 
     if (strparm[0] == '0' && strparm[1] == 'x')
@@ -1723,6 +1728,7 @@ static int ParseIntParameter(char *strparm)
         sscanf(strparm, "%i", &parm);
 
     return parm;
+#endif
 }
 
 static void SetVariable(default_t *def, char *value)
@@ -1763,7 +1769,11 @@ static void SetVariable(default_t *def, char *value)
             break;
 
         case DEFAULT_FLOAT:
+#ifdef MINIGPU
+            * (float *) def->location = 0;
+#else
             * (float *) def->location = (float) atof(value);
+#endif
             break;
     }
 }
@@ -1880,6 +1890,10 @@ void M_SaveDefaultsAlternate(char *main, char *extra)
 
 void M_LoadDefaults (void)
 {
+#ifdef MINIGPU
+    /* Defaults remain the compiled-in values: there is no configuration FS. */
+    return;
+#else
     int i;
  
     // check for a custom default file
@@ -1930,6 +1944,7 @@ void M_LoadDefaults (void)
 
     LoadDefaultCollection(&doom_defaults);
     LoadDefaultCollection(&extra_defaults);
+#endif
 }
 
 // Get a configuration file variable by its name
@@ -2058,6 +2073,11 @@ static char *GetDefaultConfigDir(void)
 
 void M_SetConfigDir(char *dir)
 {
+#ifdef MINIGPU
+    (void)dir;
+    configdir = "";
+    return;
+#else
     // Use the directory that was passed, or find the default.
 
     if (dir != NULL)
@@ -2077,6 +2097,7 @@ void M_SetConfigDir(char *dir)
     // Make the directory if it doesn't already exist:
 
     M_MakeDirectory(configdir);
+#endif
 }
 
 //
@@ -2086,6 +2107,10 @@ void M_SetConfigDir(char *dir)
 
 char *M_GetSaveGameDir(char *iwadname)
 {
+#ifdef MINIGPU
+    (void)iwadname;
+    return "";
+#else
     char *savegamedir;
 #if ORIGCODE
     char *topdir;
@@ -2124,5 +2149,6 @@ char *M_GetSaveGameDir(char *iwadname)
     }
 
     return savegamedir;
+#endif
 }
 
