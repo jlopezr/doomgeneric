@@ -86,13 +86,6 @@ static int dequeue_key(int *pressed, unsigned char *doomKey)
     return 1;
 }
 
-static uint16_t rgba8888_to_rgb565(uint32_t pixel)
-{
-    return (uint16_t)(((pixel >> 8) & 0xf800u)
-                    | ((pixel >> 5) & 0x07e0u)
-                    | ((pixel >> 3) & 0x001fu));
-}
-
 void DG_Init(void)
 {
     key_read = 0;
@@ -104,20 +97,15 @@ void DG_Init(void)
     REG(VIDEO_CTRL) = VIDEO_MODE_SCANOUT;
 }
 
-void DG_DrawFrame(void)
+uint16_t *DG_BeginFrame(void)
 {
-    uint16_t *dst;
-    unsigned y, x;
-
     /* Do not overwrite the buffer the scanout has not swapped away yet. */
     while (REG(VIDEO_SWAP) & 1u) {}
+    return (uint16_t *)frame_base;
+}
 
-    dst = (uint16_t *)frame_base;
-    for (y = 0; y < MINIGPU_HEIGHT; ++y)
-        for (x = 0; x < MINIGPU_WIDTH; ++x)
-            dst[y * MINIGPU_WIDTH + x] =
-                rgba8888_to_rgb565(DG_ScreenBuffer[y * MINIGPU_WIDTH + x]);
-
+void DG_DrawFrame(void)
+{
     REG(VIDEO_SWAP) = 1;
     frame_base = frame_base == MINIGPU_FB_FRONT ? MINIGPU_FB_BACK : MINIGPU_FB_FRONT;
 }

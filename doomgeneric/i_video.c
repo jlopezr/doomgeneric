@@ -132,8 +132,17 @@ typedef struct
 
 static uint16_t rgb565_palette[256];
 
+#ifdef MINIGPU
+/* El backend presenta directamente el backbuffer RGB565 que el escáner no lee. */
+extern uint16_t *DG_BeginFrame(void);
+#endif
+
 void cmap_to_rgb565(uint16_t * out, uint8_t * in, int in_pixels)
 {
+#ifdef MINIGPU
+    while (in_pixels--)
+        *out++ = rgb565_palette[*in++];
+#else
     int i, j;
     struct color c;
     uint16_t r, g, b;
@@ -151,6 +160,7 @@ void cmap_to_rgb565(uint16_t * out, uint8_t * in, int in_pixels)
             out++;
         }
     }
+#endif
 }
 
 void cmap_to_fb(uint8_t *out, uint8_t *in, int in_pixels)
@@ -219,6 +229,10 @@ void I_InitGraphics (void)
 
 #else  // CMAP256
 
+
+#ifdef MINIGPU
+	mode = "rgb565";
+#else
 	gfxmodeparm = M_CheckParmWithArgs("-gfxmode", 1);
 
 	if (gfxmodeparm) {
@@ -229,6 +243,7 @@ void I_InitGraphics (void)
 		// maybe could warn here?
 		mode = "rgba8888";
 	}
+#endif
 
 	if (strcmp(mode, "rgba8888") == 0) {
 		// default mode
@@ -334,7 +349,11 @@ void I_FinishUpdate (void)
 
     /* DRAW SCREEN */
     line_in  = (unsigned char *) I_VideoBuffer;
+#ifdef MINIGPU
+    line_out = (unsigned char *) DG_BeginFrame();
+#else
     line_out = (unsigned char *) DG_ScreenBuffer;
+#endif
 
     y = SCREENHEIGHT;
 
@@ -357,8 +376,11 @@ void I_FinishUpdate (void)
                 }
             }
 #else
-            //cmap_to_rgb565((void*)line_out, (void*)line_in, SCREENWIDTH);
+#ifdef MINIGPU
+            cmap_to_rgb565((void*)line_out, (void*)line_in, SCREENWIDTH);
+#else
             cmap_to_fb((void*)line_out, (void*)line_in, SCREENWIDTH);
+#endif
 #endif
             line_out += (SCREENWIDTH * fb_scaling * (s_Fb.bits_per_pixel/8)) + x_offset_end;
         }
@@ -409,6 +431,7 @@ void I_SetPalette (byte* palette)
         colors[i].r = gammatable[usegamma][*palette++];
         colors[i].g = gammatable[usegamma][*palette++];
         colors[i].b = gammatable[usegamma][*palette++];
+        rgb565_palette[i] = GFX_RGB565(colors[i].r, colors[i].g, colors[i].b);
     }
 
 #ifdef CMAP256
