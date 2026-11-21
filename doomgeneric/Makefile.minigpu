@@ -2,6 +2,7 @@
 # Doom1.WAD stays local: pass DOOM_WAD=/path/to/doom.wad to override it.
 
 MINI_CC ?= ../../tools/mini-cc
+MINI_CC_FLAGS ?=
 OUTDIR ?= ../../_build/c
 DOOM_WAD ?= ../Doom1.WAD
 OUTPUT ?= $(OUTDIR)/doom_minigpu.bin
@@ -19,7 +20,7 @@ all: $(OUTPUT)
 $(OUTPUT): $(CORE_SOURCES) minigpu_main.c doomgeneric_minigpu.c w_file_minigpu.c \
            w_file_minigpu.h $(RUNTIME) $(DOOM_WAD)
 
-	$(MINI_CC) --far-calls $(CPPFLAGS) minigpu_main.c $(CORE_SOURCES) \
+	$(MINI_CC) --far-calls $(MINI_CC_FLAGS) $(CPPFLAGS) minigpu_main.c $(CORE_SOURCES) \
 		doomgeneric_minigpu.c w_file_minigpu.c $(RUNTIME) \
 		--data doom_wad=$(DOOM_WAD) --outdir $(OUTDIR) -o $(OUTPUT)
 
