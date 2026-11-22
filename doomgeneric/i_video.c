@@ -41,6 +41,7 @@ rcsid[] = "$Id: i_x.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 #include <stdarg.h>
@@ -350,7 +351,19 @@ void I_FinishUpdate (void)
     /* DRAW SCREEN */
     line_in  = (unsigned char *) I_VideoBuffer;
 #ifdef MINIGPU
-    line_out = (unsigned char *) DG_BeginFrame();
+    /* Doom siempre pinta 320x200; el scanout MiniGPU es 320x240.  Sin
+     * inicializar estas cuarenta filas quedaban datos antiguos de SDRAM bajo
+     * la imagen.  Se reservan arriba y abajo veinte líneas negras y el juego
+     * queda centrado, sin añadir trabajo al conversor de sus 200 líneas. */
+    {
+        unsigned int row_bytes = s_Fb.xres * (s_Fb.bits_per_pixel / 8);
+        unsigned int top_rows = (s_Fb.yres - SCREENHEIGHT) / 2;
+        unsigned char *frame = (unsigned char *) DG_BeginFrame();
+        memset(frame, 0, top_rows * row_bytes);
+        memset(frame + (top_rows + SCREENHEIGHT) * row_bytes, 0,
+               (s_Fb.yres - top_rows - SCREENHEIGHT) * row_bytes);
+        line_out = frame + top_rows * row_bytes;
+    }
 #else
     line_out = (unsigned char *) DG_ScreenBuffer;
 #endif

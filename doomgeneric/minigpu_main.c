@@ -13,7 +13,7 @@ extern unsigned doom_wad_end[];
 
 int main(void)
 {
-    static char *argv[] = { "doom", "-iwad", "embedded.wad", "-nosound", 0 };
+    static char *argv[] = { "doom", "-iwad", "embedded.wad", "-nomusic", 0 };
     void (*heap_init)(void *, size_t) = mini_heap_init;
     void (*doom_create)(int, char **) = doomgeneric_Create;
 
