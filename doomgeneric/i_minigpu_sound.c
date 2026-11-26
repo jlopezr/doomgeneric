@@ -16,7 +16,7 @@
 
 #define MINI_CHANNELS 16
 #define MINI_RING_FRAMES 8192
-#define MINI_TARGET_FRAMES 4096
+#define MINI_TARGET_FRAMES 6144
 #define MINI_MIX_FRAMES 256
 
 typedef struct {
@@ -39,6 +39,7 @@ static int16_t mix_samples[MINI_MIX_FRAMES * AUDIO_CHANNELS];
 static audio_ring_t ring;
 static mini_voice_t voices[MINI_CHANNELS];
 static boolean sound_ready;
+static boolean sound_started;
 static boolean use_sfx_prefix;
 
 /* Opciones que m_config expone cuando FEATURE_SOUND está activo. El backend
@@ -132,12 +133,14 @@ static boolean mini_init(boolean prefix) {
     use_sfx_prefix = prefix;
     for (i = 0; i < MINI_CHANNELS; ++i) voices[i].active = false;
     sound_ready = audio_ring_init(&ring, ring_samples, MINI_RING_FRAMES);
+    sound_started = false;
     return sound_ready;
 }
 
 static void mini_shutdown(void) {
     if (sound_ready) REG(AUDIO_CTRL) = 0;
     sound_ready = false;
+    sound_started = false;
 }
 
 static void mini_update(void) {
@@ -152,6 +155,12 @@ static void mini_update(void) {
         mix_frames(count);
         if (audio_ring_write(&ring, mix_samples, count) != count) return;
         remaining -= count;
+    }
+    /* El DMA no ve un ring vacío: la primera actualización publica el
+     * colchón completo antes de poner en marcha el consumidor HDMI. */
+    if (!sound_started) {
+        audio_ring_start(&ring);
+        sound_started = true;
     }
 }
 
